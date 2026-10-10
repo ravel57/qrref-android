@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Только для debug: позволяет указать в настройках локальный сервер по http (например, http://10.0.2.2:8080) -->
+    <application android:usesCleartextTraffic="true" />
+
+</manifest>

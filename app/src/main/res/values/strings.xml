@@ -1,93 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">qrRef</string>
-    <string name="share_label">Отправить через qrRef</string>
-
-    <string name="tab_receive">Прием</string>
-    <string name="tab_send">Отправка</string>
-    <string name="tab_exchange">Обмен</string>
-
-    <string name="settings">Настройки</string>
-    <string name="status_online">На связи</string>
-    <string name="status_offline">Нет соединения</string>
-
-    <!-- Прием -->
-    <string name="receive_hint">Покажите этот QR-код на другом устройстве, чтобы получить текст или файл</string>
-    <string name="auto_open_links">Авто переход по ссылке</string>
-    <string name="received_empty">Пока ничего не получено</string>
-    <string name="received_title">Полученное</string>
-    <string name="downloading_file">Скачивание файла…</string>
-    <string name="action_copy">Копировать</string>
-    <string name="action_share">Поделиться</string>
-    <string name="action_open">Открыть</string>
-    <string name="file_saved_in_downloads">Сохранено в «Загрузки»</string>
-    <string name="copied">Скопировано</string>
-
-    <!-- Отправка -->
-    <string name="send_text_label">Текст для пересылки</string>
-    <string name="send_attach_file">Прикрепить файл</string>
-    <string name="send_remove_file">Убрать файл</string>
-    <string name="send_from_share">Получено через «Поделиться». Наведите камеру на QR-код получателя.</string>
-    <string name="send_scan_hint">Наведите камеру на QR-код на экране получателя</string>
-    <string name="send_sending">Отправка…</string>
-    <string name="sent">Отправлено</string>
-    <string name="nothing_to_send">Введите текст или прикрепите файл</string>
-
-    <!-- Сопряжение -->
-    <string name="pair_start">Сопряжение (bridge)</string>
-    <string name="pair_title">Сопряжение через bridge</string>
-    <string name="pair_step_a">Шаг 1: отсканируйте QR первого компьютера (сессия A).</string>
-    <string name="pair_step_b">Шаг 2: отсканируйте QR второго компьютера (сессия B).</string>
-    <string name="pair_reset">Сбросить</string>
-    <string name="pair_exit">Выйти</string>
-    <string name="pair_saved_a">Найдена сохранённая сессия A. Отсканируйте второй QR (сессия B).</string>
-    <string name="pair_a_opened">Сессия A открыта. Теперь отсканируйте второй QR (сессия B).</string>
-    <string name="pair_same_qr">Отсканирован тот же QR. Нужен QR второго компьютера.</string>
-    <string name="pair_creating">Создаю мост…</string>
-    <string name="pair_done">Мост создан. Теперь компьютеры могут общаться.</string>
-    <string name="pair_failed">Ошибка создания моста.</string>
-    <string name="pair_was_reset">Сессия сброшена. Отсканируйте первый QR (сессия A).</string>
-    <string name="pair_hint_first">Отсканируйте первый QR (сессия A).</string>
-    <string name="pair_hint_second">Отсканируйте второй QR (сессия B).</string>
-
-    <!-- Обмен -->
-    <string name="exchange_waiting">Откройте «Обмен» на другом устройстве и отсканируйте его QR-код кнопкой ниже — либо покажите этот QR-код для сопряжения.</string>
-    <string name="exchange_scan_peer">Сканировать QR собеседника</string>
-    <string name="exchange_scan_peer_hint">Наведите камеру на QR-код собеседника</string>
-    <string name="exchange_close_scanner">Закрыть сканер</string>
-    <string name="chat_empty">Сообщений пока нет</string>
-    <string name="chat_message_label">Сообщение</string>
-    <string name="chat_send">Отправить</string>
-    <string name="chat_paired">Устройства связаны</string>
-    <string name="chat_attach">Прикрепить файл</string>
-    <string name="chat_uploading">Отправка файла «%1$s»…</string>
-    <string name="chat_file_download">Скачать</string>
-    <string name="chat_file_downloading">Скачивание…</string>
-
-    <!-- Камера -->
-    <string name="camera_permission_needed">Для сканирования QR-кода нужен доступ к камере</string>
-    <string name="camera_grant">Разрешить камеру</string>
-    <string name="camera_open_settings">Открыть настройки приложения</string>
-
-    <!-- Настройки -->
-    <string name="settings_server">Адрес сервера</string>
-    <string name="settings_server_invalid">Укажите адрес вида https://qrref.ru</string>
-    <string name="settings_theme">Тема</string>
-    <string name="theme_system">Как в системе</string>
-    <string name="theme_light">Светлая</string>
-    <string name="theme_dark">Темная</string>
-    <string name="settings_new_key">Новый ключ</string>
-    <string name="settings_new_key_hint">Создаст новый QR-код. Старый перестанет принимать данные, а текущая связь в «Обмене» будет разорвана.</string>
-    <string name="settings_save">Сохранить</string>
-    <string name="settings_cancel">Отмена</string>
-
-    <!-- Ошибки -->
-    <string name="error_invalid_qr">Невалидный QR (не URL).</string>
-    <string name="error_no_key">В QR нет параметра key.</string>
-    <string name="error_network">Нет связи с сервером</string>
-    <string name="error_server">Ошибка сервера (%1$d)</string>
-    <string name="error_not_paired">Устройства ещё не сопряжены</string>
-    <string name="error_download">Не удалось скачать файл</string>
-    <string name="error_file_read">Не удалось прочитать файл</string>
-    <string name="error_unknown">Что-то пошло не так</string>
-    <string name="error_no_app_for_link">Нет приложения для открытия ссылки</string>
+    <string name="share_label">Send via qrRef</string>
+    <string name="tab_receive">Receive on this device</string>
+    <string name="tab_send">Send from this device</string>
+    <string name="settings">Settings</string>
+    <string name="status_online">Connected</string>
+    <string name="status_offline">No connection</string>
+    <string name="receive_hint">Scan this QR code with another device: it will be offered to send text or a file here, or to start a chat</string>
+    <string name="auto_open_links">Open links automatically</string>
+    <string name="received_empty">Nothing received yet</string>
+    <string name="downloading_file">Downloading file…</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_share">Share</string>
+    <string name="action_open">Open</string>
+    <string name="file_saved_in_downloads">Saved to Downloads</string>
+    <string name="copied">Copied</string>
+    <string name="send_text_label">Text to send</string>
+    <string name="send_attach_file">Attach file</string>
+    <string name="send_remove_file">Remove file</string>
+    <string name="send_from_share">Received via Share. Point the camera at the recipient\'s QR code.</string>
+    <string name="send_from_share_options">Received via Share. Choose “Send text/file”: your data is already filled in.</string>
+    <string name="send_scan_hint">Point the camera at the QR code on the recipient\'s screen</string>
+    <string name="send_sending">Sending…</string>
+    <string name="sent">Sent</string>
+    <string name="nothing_to_send">Enter text or attach a file</string>
+    <string name="scan_second_hint">Point the camera at the second computer\'s QR code</string>
+    <string name="options_title">QR code scanned</string>
+    <string name="option_send">Send text/file</string>
+    <string name="option_chat">Start chat</string>
+    <string name="option_chat_other">Start chat with another computer (exchange mode)</string>
+    <string name="option_rescan">Scan another QR</string>
+    <string name="back">Back</string>
+    <string name="compose_send">Send</string>
+    <string name="error_same_device">This is this device\'s own QR code</string>
+    <string name="error_chat_start">Couldn\'t start the chat</string>
+    <string name="computers_paired">Computers linked: the chat opened on both</string>
+    <string name="chat_close">Close chat</string>
+    <string name="chat_title">Chat</string>
+    <string name="pair_same_qr">Same QR scanned. The second computer\'s QR is needed.</string>
+    <string name="pair_failed">Couldn\'t link the devices.</string>
+    <string name="chat_empty">No messages yet</string>
+    <string name="chat_message_label">Message</string>
+    <string name="chat_send">Send</string>
+    <string name="chat_attach">Attach file</string>
+    <string name="chat_uploading">Sending file “%1$s”…</string>
+    <string name="chat_file_download">Download</string>
+    <string name="chat_file_downloading">Downloading…</string>
+    <string name="camera_permission_needed">Camera access is needed to scan QR codes</string>
+    <string name="camera_grant">Allow camera</string>
+    <string name="camera_open_settings">Open app settings</string>
+    <string name="settings_server">Server address</string>
+    <string name="settings_server_invalid">Enter an address like https://qrref.io</string>
+    <string name="settings_theme">Theme</string>
+    <string name="theme_system">Same as system</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="settings_new_key">New key</string>
+    <string name="settings_new_key_hint">Creates a new QR code. The old one will stop receiving data, and an open chat will be closed.</string>
+    <string name="settings_save">Save</string>
+    <string name="settings_cancel">Cancel</string>
+    <string name="error_invalid_qr">Invalid QR (not a URL).</string>
+    <string name="error_no_key">The QR has no key parameter.</string>
+    <string name="error_network">No connection to the server</string>
+    <string name="error_server">Server error (%1$d)</string>
+    <string name="error_not_paired">The devices aren\'t paired yet</string>
+    <string name="error_download">Couldn\'t download the file</string>
+    <string name="error_unknown">Something went wrong</string>
+    <string name="error_no_app_for_link">No app to open the link</string>
 </resources>

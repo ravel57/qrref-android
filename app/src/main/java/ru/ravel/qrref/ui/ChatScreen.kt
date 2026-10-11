@@ -1,5 +1,6 @@
 package ru.ravel.qrref.ui
 
+import android.text.format.Formatter
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.combinedClickable
@@ -54,45 +55,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/** Окно чата между устройствами: показывается поверх любого режима, пока устройства связаны. */
 @Composable
-fun ExchangeScreen(state: UiState, vm: MainViewModel) {
-	if (state.roomId == null) {
-		WaitingForPeer(state, vm)
-	} else {
-		Chat(state, vm)
-	}
-}
-
-@Composable
-private fun WaitingForPeer(state: UiState, vm: MainViewModel) {
-	Column(
-		modifier = Modifier
-			.fillMaxSize()
-			.verticalScroll(rememberScrollState())
-			.padding(16.dp),
-		horizontalAlignment = Alignment.CenterHorizontally,
-		verticalArrangement = Arrangement.spacedBy(12.dp),
-	) {
-		if (state.scanningPeer) {
-			ScannerPanel(
-				hint = stringResource(R.string.exchange_scan_peer_hint),
-				busy = false,
-				onCode = vm::onScanned,
-			)
-			OutlinedButton(onClick = { vm.setScanningPeer(false) }) {
-				Text(stringResource(R.string.exchange_close_scanner))
-			}
-		} else {
-			MyQrBlock(state, hint = stringResource(R.string.exchange_waiting))
-			OutlinedButton(onClick = { vm.setScanningPeer(true) }) {
-				Text(stringResource(R.string.exchange_scan_peer))
-			}
-		}
-	}
-}
-
-@Composable
-private fun Chat(state: UiState, vm: MainViewModel) {
+fun ChatScreen(state: UiState, vm: MainViewModel) {
 	val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
 		vm.sendChatFiles(uris)
 	}
@@ -102,6 +67,15 @@ private fun Chat(state: UiState, vm: MainViewModel) {
 	}
 
 	Column(Modifier.fillMaxSize()) {
+		Row(
+			Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 4.dp),
+			verticalAlignment = Alignment.CenterVertically,
+			horizontalArrangement = Arrangement.SpaceBetween,
+		) {
+			Text(stringResource(R.string.chat_title), style = MaterialTheme.typography.titleMedium)
+			TextButton(onClick = vm::leaveChat) { Text(stringResource(R.string.chat_close)) }
+		}
+		HorizontalDivider()
 		if (state.chat.isEmpty()) {
 			Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
 				Text(
@@ -195,7 +169,7 @@ private fun FileContent(message: ChatMessage, file: ChatFile, vm: MainViewModel)
 	Text(file.name, style = MaterialTheme.typography.bodyLarge)
 	if (file.size >= 0) {
 		Text(
-			formatSize(file.size),
+			Formatter.formatShortFileSize(context, file.size),
 			style = MaterialTheme.typography.labelMedium,
 			color = MaterialTheme.colorScheme.onSurfaceVariant,
 		)
@@ -217,11 +191,5 @@ private fun FileContent(message: ChatMessage, file: ChatFile, vm: MainViewModel)
 	}
 }
 
-private fun formatSize(bytes: Long): String = when {
-	bytes >= 1L shl 30 -> "%.1f ГБ".format(bytes / (1L shl 30).toDouble())
-	bytes >= 1L shl 20 -> "%.1f МБ".format(bytes / (1L shl 20).toDouble())
-	bytes >= 1L shl 10 -> "%.0f КБ".format(bytes / (1L shl 10).toDouble())
-	else -> "$bytes Б"
-}
 
 private val TIME_FORMAT = SimpleDateFormat("HH:mm:ss", Locale.getDefault())

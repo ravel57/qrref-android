@@ -40,7 +40,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import ru.ravel.qrref.R
-import ru.ravel.qrref.StatusKind
 import ru.ravel.qrref.util.QrBitmap
 
 @Composable
@@ -71,13 +70,6 @@ fun ConnectionDot(connected: Boolean, modifier: Modifier = Modifier) {
 			.clip(CircleShape)
 			.background(color)
 	)
-}
-
-@Composable
-fun statusColor(kind: StatusKind): Color = when (kind) {
-	StatusKind.HINT -> MaterialTheme.colorScheme.onSurfaceVariant
-	StatusKind.OK -> Color(0xFF2E9E5B)
-	StatusKind.ERR -> MaterialTheme.colorScheme.error
 }
 
 /** Показывает [content] только когда есть доступ к камере; иначе объясняет, зачем он нужен. */

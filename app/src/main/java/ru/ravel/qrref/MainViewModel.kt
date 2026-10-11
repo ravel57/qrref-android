@@ -60,18 +60,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 	private var lastScanAt = 0L
 
 	init {
-		val savedA = prefs.bridgeA
-		if (savedA.isNotEmpty()) {
-			_state.update {
-				it.copy(
-					pairing = Pairing(
-						active = true,
-						aKey = savedA,
-						status = string(R.string.pair_saved_a),
-					)
-				)
-			}
-		}
 		subscribeKeyTopics(_state.value.key)
 		viewModelScope.launch {
 			stomp.connected.collect { connected ->
@@ -88,7 +76,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
 	fun onAppStop() = stomp.stop()
 
-	fun selectScreen(screen: Screen) = _state.update { it.copy(screen = screen, scanningPeer = false) }
+	fun selectScreen(screen: Screen) = _state.update { it.copy(screen = screen) }
 
 	// ---- «Поделиться» и выбор файлов ----
 
@@ -98,10 +86,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 			_state.update {
 				it.copy(
 					screen = Screen.SEND,
+					sendStep = SendStep.SCAN,
+					scannedKey = "",
 					draftText = text.orEmpty(),
 					files = files,
 					fromShare = true,
-					pairing = it.pairing.copy(active = false),
 				)
 			}
 		}
@@ -118,7 +107,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
 	fun setDraftText(text: String) = _state.update { it.copy(draftText = text) }
 
-	// ---- отправка ----
+	// ---- отправка: сканирование и действия над отсканированным устройством ----
 
 	fun onScanned(raw: String) {
 		val now = SystemClock.elapsedRealtime()
@@ -130,17 +119,30 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 		if (current.sending) return
 
 		val link = QrLink.parse(raw) ?: return message(R.string.error_invalid_qr)
+		if (link.key.isEmpty()) return message(R.string.error_no_key)
 
-		when {
-			current.screen == Screen.EXCHANGE -> pairWithPeer(link)
-			current.pairing.active || link.bridge -> handlePairing(link)
-			link.key.isEmpty() -> message(R.string.error_no_key)
-			current.draftText.isBlank() && current.files.isEmpty() -> message(R.string.nothing_to_send)
-			else -> send(link.key)
+		when (current.sendStep) {
+			SendStep.SCAN -> _state.update { it.copy(scannedKey = link.key, sendStep = SendStep.OPTIONS) }
+			SendStep.SCAN_SECOND -> pairComputers(current.scannedKey, link.key)
+			SendStep.OPTIONS, SendStep.COMPOSE -> Unit
 		}
 	}
 
-	private fun send(key: String) {
+	fun openCompose() = _state.update { it.copy(sendStep = SendStep.COMPOSE) }
+
+	fun backToOptions() = _state.update { it.copy(sendStep = SendStep.OPTIONS) }
+
+	fun startSecondScan() = _state.update { it.copy(sendStep = SendStep.SCAN_SECOND) }
+
+	fun rescan() = _state.update { it.copy(sendStep = SendStep.SCAN, scannedKey = "") }
+
+	/** Отправляет введённый текст и выбранные файлы на отсканированное устройство. */
+	fun sendToScanned() {
+		val state = _state.value
+		val key = state.scannedKey
+		if (key.isEmpty() || state.sending) return
+		if (state.draftText.isBlank() && state.files.isEmpty()) return message(R.string.nothing_to_send)
+
 		_state.update { it.copy(sending = true) }
 		viewModelScope.launch {
 			try {
@@ -153,7 +155,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 					api.sendFile(key, file)
 					_state.update { it.copy(files = it.files - file) }
 				}
-				_state.update { it.copy(fromShare = false) }
+				_state.update { it.copy(fromShare = false, sendStep = SendStep.OPTIONS) }
 				message(R.string.sent)
 			} catch (e: Exception) {
 				rethrowCancellation(e)
@@ -164,114 +166,49 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 		}
 	}
 
-	// ---- сопряжение (bridge) ----
+	/** Чат с отсканированным устройством: свой ключ + ключ устройства = мост. */
+	fun startChat() {
+		val state = _state.value
+		val peerKey = state.scannedKey
+		if (peerKey.isEmpty() || state.sending) return
+		if (peerKey == state.key) return message(R.string.error_same_device)
 
-	fun startPairing() {
-		val savedA = prefs.bridgeA
-		_state.update {
-			val aKey = it.pairing.aKey.ifEmpty { savedA }
-			it.copy(
-				pairing = Pairing(
-					active = true,
-					aKey = aKey,
-					bKey = it.pairing.bKey,
-					status = string(if (aKey.isEmpty()) R.string.pair_hint_first else R.string.pair_hint_second),
-				)
-			)
-		}
-	}
-
-	fun resetPairing() {
-		prefs.bridgeA = ""
-		_state.update {
-			it.copy(pairing = Pairing(active = true, status = string(R.string.pair_was_reset)))
-		}
-	}
-
-	fun exitPairing() = _state.update { it.copy(pairing = it.pairing.copy(active = false)) }
-
-	private fun handlePairing(link: ScannedQr) {
-		if (link.hasPair) {
-			createBridge(link.a, link.b)
-			return
-		}
-		if (link.key.isEmpty()) {
-			setPairing { it.copy(active = true, status = string(R.string.error_no_key), statusKind = StatusKind.ERR) }
-			return
-		}
-
-		val aKey = _state.value.pairing.aKey
-		when {
-			aKey.isEmpty() -> {
-				prefs.bridgeA = link.key
-				setPairing {
-					it.copy(
-						active = true,
-						aKey = link.key,
-						status = string(R.string.pair_a_opened),
-						statusKind = StatusKind.HINT,
-					)
-				}
-			}
-
-			aKey == link.key -> setPairing {
-				it.copy(active = true, status = string(R.string.pair_same_qr), statusKind = StatusKind.ERR)
-			}
-
-			else -> {
-				setPairing { it.copy(active = true, bKey = link.key) }
-				createBridge(aKey, link.key)
-			}
-		}
-	}
-
-	private fun createBridge(a: String, b: String) {
-		setPairing { it.copy(status = string(R.string.pair_creating), statusKind = StatusKind.HINT) }
 		_state.update { it.copy(sending = true) }
 		viewModelScope.launch {
 			try {
-				api.createBridge(a, b)
-				prefs.bridgeA = ""
-				setPairing {
-					Pairing(active = true, status = string(R.string.pair_done), statusKind = StatusKind.OK)
-				}
+				val roomId = api.createBridge(state.key, peerKey)
+				// roomId есть в ответе — не ждём сообщения по сокету, оно могло потеряться при переподключении
+				roomId?.let(::attachRoom)
+				_state.update { it.copy(sendStep = SendStep.SCAN, scannedKey = "") }
 			} catch (e: Exception) {
 				rethrowCancellation(e)
-				setPairing { it.copy(status = string(R.string.pair_failed), statusKind = StatusKind.ERR) }
+				message(R.string.error_chat_start)
 			} finally {
 				_state.update { it.copy(sending = false) }
 			}
 		}
 	}
 
-	private fun setPairing(transform: (Pairing) -> Pairing) =
-		_state.update { it.copy(pairing = transform(it.pairing)) }
+	/** Чат между отсканированным устройством и вторым компьютером; у обоих откроется окно чата. */
+	private fun pairComputers(firstKey: String, secondKey: String) {
+		if (secondKey == firstKey) return message(R.string.pair_same_qr)
 
-	// ---- обмен ----
-
-	fun setScanningPeer(scanning: Boolean) = _state.update { it.copy(scanningPeer = scanning) }
-
-	/** Телефон сам становится одной из сторон моста: свой ключ + ключ отсканированного собеседника. */
-	private fun pairWithPeer(link: ScannedQr) {
-		val myKey = _state.value.key
-		val peerKey = link.key
-		when {
-			peerKey.isEmpty() -> message(R.string.error_no_key)
-			peerKey == myKey -> message(R.string.pair_same_qr)
-			else -> viewModelScope.launch {
-				try {
-					val roomId = api.createBridge(myKey, peerKey)
-					_state.update { it.copy(scanningPeer = false) }
-					// roomId есть в ответе — не ждём сообщения по сокету, оно могло потеряться при переподключении
-					roomId?.let(::attachRoom)
-					message(R.string.chat_paired)
-				} catch (e: Exception) {
-					rethrowCancellation(e)
-					message(R.string.pair_failed)
-				}
+		_state.update { it.copy(sending = true) }
+		viewModelScope.launch {
+			try {
+				api.createBridge(firstKey, secondKey)
+				_state.update { it.copy(sendStep = SendStep.SCAN, scannedKey = "") }
+				message(R.string.computers_paired)
+			} catch (e: Exception) {
+				rethrowCancellation(e)
+				message(R.string.pair_failed)
+			} finally {
+				_state.update { it.copy(sending = false) }
 			}
 		}
 	}
+
+	// ---- чат ----
 
 	fun setChatDraft(text: String) = _state.update { it.copy(chatDraft = text) }
 
@@ -294,8 +231,27 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 		val previous = _state.value.roomId
 		if (previous == roomId) return
 		previous?.let { stomp.unsubscribe(roomTopic(it)) }
-		_state.update { it.copy(roomId = roomId, chat = emptyList(), scanningPeer = false) }
+		_state.update { it.copy(roomId = roomId, chat = emptyList()) }
 		stomp.subscribe(roomTopic(roomId), ::onRoomMessage)
+	}
+
+	/** Закрыть чат: сервер сообщит об этом и собеседнику. */
+	fun leaveChat() {
+		val key = _state.value.key
+		viewModelScope.launch {
+			try {
+				api.leaveRoom(key)
+			} catch (e: Exception) {
+				rethrowCancellation(e)
+			} finally {
+				clearRoom()
+			}
+		}
+	}
+
+	private fun clearRoom() {
+		_state.value.roomId?.let { stomp.unsubscribe(roomTopic(it)) }
+		_state.update { it.copy(roomId = null, chat = emptyList(), chatDraft = "") }
 	}
 
 	private fun refreshRoom() {
@@ -318,6 +274,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 		val mine = json.optString("from") == _state.value.key
 		val ts = json.optLong("ts", System.currentTimeMillis())
 		val msg = when (json.optString("type")) {
+			"closed" -> {
+				clearRoom()
+				return
+			}
+
 			"text" -> ChatMessage(nextId++, json.optString("text"), mine, ts)
 			"file" -> ChatMessage(
 				id = nextId++, text = "", mine = mine, ts = ts,
@@ -443,12 +404,20 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
 	fun regenerateKey() {
 		val old = _state.value.key
+		// собеседник получит «чат закрыт», а не повиснет в комнате с недействительным ключом
+		viewModelScope.launch {
+			try {
+				api.leaveRoom(old)
+			} catch (e: Exception) {
+				rethrowCancellation(e)
+			}
+		}
 		val key = KeyGenerator.generate()
 		prefs.key = key
 		stomp.unsubscribe(activityTopic(old))
 		stomp.unsubscribe(bridgeTopic(old))
 		_state.value.roomId?.let { stomp.unsubscribe(roomTopic(it)) }
-		_state.update { it.copy(key = key, roomId = null, chat = emptyList(), scanningPeer = false) }
+		_state.update { it.copy(key = key, roomId = null, chat = emptyList(), sendStep = SendStep.SCAN, scannedKey = "") }
 		subscribeKeyTopics(key)
 	}
 

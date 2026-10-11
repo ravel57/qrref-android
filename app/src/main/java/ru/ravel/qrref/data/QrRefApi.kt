@@ -88,6 +88,11 @@ class QrRefApi(
 		post(url("room", "file", key), body)
 	}
 
+	/** Завершает чат: сервер расформировывает комнату и сообщает об этом обоим участникам. */
+	suspend fun leaveRoom(key: String) {
+		post(url("room", "leave", key), ByteArray(0).toRequestBody(null))
+	}
+
 	suspend fun sendRoomText(key: String, text: String) {
 		val body = JSONObject().put("text", text).toString().toRequestBody(JSON)
 		post(url("room", "text", key), body)

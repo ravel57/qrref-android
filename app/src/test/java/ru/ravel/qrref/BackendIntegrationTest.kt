@@ -160,6 +160,34 @@ class BackendIntegrationTest {
 	}
 
 	@Test
+	fun `leaving the room notifies the peer and drops the room for both`() = runBlocking {
+		val a = KeyGenerator.generate()
+		val b = KeyGenerator.generate()
+		val roomId = api.createBridge(a, b)!!
+		val inbox = LinkedBlockingQueue<String>()
+		stomp.subscribe("/topic/room/$roomId") { inbox.add(it) }
+		stomp.start(wsUrl())
+		awaitConnected()
+		Thread.sleep(300)
+
+		api.leaveRoom(a)
+
+		val closed = JSONObject(inbox.poll(5, TimeUnit.SECONDS)!!)
+		assertEquals("closed", closed.getString("type"))
+		assertEquals(a, closed.getString("from"))
+		assertNull(api.roomOf(a))
+		assertNull("the peer must not keep the dead room", api.roomOf(b))
+		// после выхода писать в чат нельзя
+		val error = runCatching { api.sendRoomText(b, "x") }.exceptionOrNull()
+		assertTrue(error is ru.ravel.qrref.data.ApiException && error.code == 409)
+	}
+
+	@Test
+	fun `leaving without a room is harmless`() = runBlocking {
+		api.leaveRoom(KeyGenerator.generate())
+	}
+
+	@Test
 	fun `re-pairing drops the old room of the former peer`() = runBlocking {
 		val a = KeyGenerator.generate()
 		val b = KeyGenerator.generate()

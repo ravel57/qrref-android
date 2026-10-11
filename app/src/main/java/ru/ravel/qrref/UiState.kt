@@ -4,17 +4,11 @@ import android.net.Uri
 import ru.ravel.qrref.data.PickedFile
 import ru.ravel.qrref.data.ThemeMode
 
-enum class Screen { RECEIVE, SEND, EXCHANGE }
+/** Два режима: принимать на это устройство (показываем свой QR) или отправлять с него (сканируем чужой). */
+enum class Screen { RECEIVE, SEND }
 
-enum class StatusKind { HINT, OK, ERR }
-
-data class Pairing(
-	val active: Boolean = false,
-	val aKey: String = "",
-	val bKey: String = "",
-	val status: String = "",
-	val statusKind: StatusKind = StatusKind.HINT,
-)
+/** Шаги режима отправки: сканирование → действия над отсканированным устройством → отправка / второй QR. */
+enum class SendStep { SCAN, OPTIONS, COMPOSE, SCAN_SECOND }
 
 sealed interface ReceivedItem {
 	val id: Long
@@ -69,13 +63,13 @@ data class UiState(
 	val files: List<PickedFile> = emptyList(),
 	val fromShare: Boolean = false,
 	val sending: Boolean = false,
-	val pairing: Pairing = Pairing(),
+	val sendStep: SendStep = SendStep.SCAN,
+	val scannedKey: String = "",
 
-	// Обмен
+	// Чат
 	val roomId: String? = null,
 	val chat: List<ChatMessage> = emptyList(),
 	val chatDraft: String = "",
-	val scanningPeer: Boolean = false,
 	val uploadingChatFile: String? = null,
 )
 

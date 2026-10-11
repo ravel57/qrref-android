@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -76,7 +75,7 @@ fun QrrefApp(vm: MainViewModel) {
 		},
 		bottomBar = {
 			// пока открыта клавиатура, нижняя панель только мешает
-			if (!WindowInsets.isImeVisible) {
+			if (!WindowInsets.isImeVisible && state.roomId == null) {
 				NavigationBar {
 					Screen.entries.forEach { screen ->
 						NavigationBarItem(
@@ -98,10 +97,14 @@ fun QrrefApp(vm: MainViewModel) {
 				.consumeWindowInsets(padding)
 				.imePadding()
 		) {
-			when (state.screen) {
-				Screen.RECEIVE -> ReceiveScreen(state, vm)
-				Screen.SEND -> SendScreen(state, vm)
-				Screen.EXCHANGE -> ExchangeScreen(state, vm)
+			// чат открывается поверх любого режима, пока устройства связаны
+			if (state.roomId != null) {
+				ChatScreen(state, vm)
+			} else {
+				when (state.screen) {
+					Screen.RECEIVE -> ReceiveScreen(state, vm)
+					Screen.SEND -> SendScreen(state, vm)
+				}
 			}
 		}
 	}
@@ -114,11 +117,9 @@ fun QrrefApp(vm: MainViewModel) {
 private fun Screen.label(): Int = when (this) {
 	Screen.RECEIVE -> R.string.tab_receive
 	Screen.SEND -> R.string.tab_send
-	Screen.EXCHANGE -> R.string.tab_exchange
 }
 
 private fun Screen.icon(): ImageVector = when (this) {
 	Screen.RECEIVE -> Icons.Default.KeyboardArrowDown
 	Screen.SEND -> Icons.AutoMirrored.Filled.Send
-	Screen.EXCHANGE -> Icons.Default.Refresh
 }

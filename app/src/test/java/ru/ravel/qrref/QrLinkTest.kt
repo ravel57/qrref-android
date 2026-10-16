@@ -12,14 +12,14 @@ class QrLinkTest {
 
 	@Test
 	fun `parses key from url with scheme`() {
-		val qr = QrLink.parse("https://qrref.ru/?key=abc123")!!
+		val qr = QrLink.parse("https://qrref.io/?key=abc123")!!
 		assertEquals("abc123", qr.key)
 		assertFalse(qr.bridge)
 	}
 
 	@Test
 	fun `parses key from url without scheme like the server QR`() {
-		val qr = QrLink.parse("qrref.ru/?key=AbC_d-9")!!
+		val qr = QrLink.parse("qrref.io/?key=AbC_d-9")!!
 		assertEquals("AbC_d-9", qr.key)
 	}
 
@@ -35,18 +35,18 @@ class QrLinkTest {
 
 	@Test
 	fun `missing key gives empty key`() {
-		assertEquals("", QrLink.parse("https://qrref.ru/")!!.key)
+		assertEquals("", QrLink.parse("https://qrref.io/")!!.key)
 	}
 
 	@Test
 	fun `unsafe key is dropped`() {
-		assertEquals("", QrLink.parse("https://qrref.ru/?key=../../etc")!!.key)
-		assertEquals("", QrLink.parse("https://qrref.ru/?key=a%2Fb")!!.key)
+		assertEquals("", QrLink.parse("https://qrref.io/?key=../../etc")!!.key)
+		assertEquals("", QrLink.parse("https://qrref.io/?key=a%2Fb")!!.key)
 	}
 
 	@Test
 	fun `detects bridge qr by a and b`() {
-		val qr = QrLink.parse("https://qrref.ru/?a=first&b=second")!!
+		val qr = QrLink.parse("https://qrref.io/?a=first&b=second")!!
 		assertTrue(qr.bridge)
 		assertTrue(qr.hasPair)
 		assertEquals("first", qr.a)
@@ -55,8 +55,8 @@ class QrLinkTest {
 
 	@Test
 	fun `detects bridge qr by path and flag`() {
-		assertTrue(QrLink.parse("https://qrref.ru/bridge?key=k1")!!.bridge)
-		assertTrue(QrLink.parse("https://qrref.ru/?key=k1&bridge=1")!!.bridge)
+		assertTrue(QrLink.parse("https://qrref.io/bridge?key=k1")!!.bridge)
+		assertTrue(QrLink.parse("https://qrref.io/?key=k1&bridge=1")!!.bridge)
 	}
 
 	@Test
@@ -68,8 +68,8 @@ class QrLinkTest {
 
 	@Test
 	fun `builds link`() {
-		assertEquals("https://qrref.ru/?key=k", QrLink.build("https://qrref.ru", "k"))
-		assertEquals("https://qrref.ru/?key=k", QrLink.build("https://qrref.ru/", "k"))
+		assertEquals("https://qrref.io/?key=k", QrLink.build("https://qrref.io", "k"))
+		assertEquals("https://qrref.io/?key=k", QrLink.build("https://qrref.io/", "k"))
 		assertEquals("key", QrLink.parse(QrLink.build("http://10.0.2.2:8080", "key"))!!.key)
 	}
 
@@ -86,11 +86,11 @@ class QrLinkTest {
 
 	@Test
 	fun `normalizes server url`() {
-		assertEquals("https://qrref.ru", QrLink.normalizeServerUrl("qrref.ru"))
-		assertEquals("https://qrref.ru", QrLink.normalizeServerUrl(" https://qrref.ru/ "))
+		assertEquals("https://qrref.io", QrLink.normalizeServerUrl("qrref.io"))
+		assertEquals("https://qrref.io", QrLink.normalizeServerUrl(" https://qrref.io/ "))
 		assertEquals("http://10.0.2.2:8080", QrLink.normalizeServerUrl("http://10.0.2.2:8080"))
 		assertNull(QrLink.normalizeServerUrl(""))
-		assertNull(QrLink.normalizeServerUrl("ftp://qrref.ru"))
+		assertNull(QrLink.normalizeServerUrl("ftp://qrref.io"))
 		assertNull(QrLink.normalizeServerUrl("not a url"))
 		assertNotNull(QrLink.normalizeServerUrl("localhost:8080"))
 	}

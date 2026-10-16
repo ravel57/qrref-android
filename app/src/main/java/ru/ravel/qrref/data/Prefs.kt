@@ -36,7 +36,7 @@ class Prefs(context: Context) {
 		set(value) = sp.edit { putString(KEY_BRIDGE_A, value) }
 
 	companion object {
-		const val DEFAULT_SERVER = "https://qrref.ru"
+		const val DEFAULT_SERVER = "https://qrref.io"
 		private const val KEY_SERVER = "server_url"
 		private const val KEY_KEY = "key"
 		private const val KEY_AUTO_OPEN = "auto_open_url"

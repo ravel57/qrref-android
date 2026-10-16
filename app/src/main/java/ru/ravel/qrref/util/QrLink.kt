@@ -14,7 +14,7 @@ data class ScannedQr(
 	val hasPair: Boolean get() = a.isNotEmpty() && b.isNotEmpty()
 }
 
-/** Разбор и сборка ссылок вида `https://qrref.ru/?key=...` — повторяет логику Scanner.vue. */
+/** Разбор и сборка ссылок вида `https://qrref.io/?key=...` — повторяет логику Scanner.vue. */
 object QrLink {
 
 	private val KEY_REGEX = Regex("^[A-Za-z0-9_-]{1,128}$")
